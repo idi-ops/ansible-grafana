@@ -21,3 +21,14 @@ grafana_repo: https://packagecloud.io/grafana/stable/el/$releasever/$basearch
 grafana_repo_key: https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
 
 grafana_root_dir: /usr/share/grafana
+
+# Each dashboard needs a name or "slug" and the url to be downladed.
+# The slug field use to be the "title" field of the dashboard in lowercase and 
+# using hyphens instead of spaces:
+#    grafana_dashboards:
+#      - slug: node-exporter-single-server
+#        url: https://grafana.com/api/dashboards/22/revisions/6/download
+#      - slug: docker-dashboard
+#        url: https://grafana.com/api/dashboards/179/revisions/5/download
+
+grafana_dashboards: []

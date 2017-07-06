@@ -1,4 +1,5 @@
 from pytest import fixture
+import requests
 
 
 grafana_admin_user = "admin"
@@ -53,3 +54,10 @@ def test_grafana_has_influxdb_datasource(Command, TestinfraBackend):
     url = "%s:%s@%s:3000/api/datasources" % (grafana_admin_user, grafana_admin_password, hostname)
     cmd = Command("curl --silent %s" % url)
     assert '"name":"collectd (managed by ansible)"' in cmd.stdout
+
+def test_grafana_has_dashboard(Command, TestinfraBackend):
+    hostname = TestinfraBackend.get_hostname()
+    url = "%s:%s@%s:3000/api/dashboards" % (grafana_admin_user, grafana_admin_password, hostname)
+    response = requests.get(url)
+    assert response.status_code == requests.codes.ok
+    assert 'dasboard' in response.text

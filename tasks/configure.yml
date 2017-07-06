@@ -60,3 +60,31 @@
     }
     url: "http://localhost:{{ grafana_port }}/api/datasources"
   when: not influxdb_datasource_configuration
+
+- name: Create temporary directory for storing the dashboards
+  tempfile:
+    state: directory
+    suffix: dashboards
+  register: tmppath
+
+- name: Fetch the JSON dashboards
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ tmppath.path }}/{{item.slug}}.json"
+  with_items: "{{ grafana_dashboards }}"
+
+- name: Create or Update the dashboards
+  uri:
+    url: "http://localhost:{{ grafana_port }}/api/dashboards/db"
+    method: POST
+    user: "{{ grafana_admin_user|quote }}"
+    password: "{{ grafana_admin_password|quote }}"
+    force_basic_auth: true
+    status_code: 200
+    headers:
+      Content-Type: 'application/json;charset=utf-8;'
+      Accept: 'application/json'
+    body: "{ 'dashboard': {{ lookup ( 'file', tmppath.path + '/' + item.slug + '.json') | from_json }}, 'overwrite': True } "
+    body_format: json
+  with_items: "{{ grafana_dashboards }}"
+
