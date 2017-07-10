@@ -32,3 +32,13 @@ grafana_root_dir: /usr/share/grafana
 #        url: https://grafana.com/api/dashboards/179/revisions/5/download
 
 grafana_dashboards: []
+
+# The users should be listed using the following template:
+#
+# grafana_users:
+#   - name: "John"
+#     mail: "john@doe.com"
+#     login: "john"
+#     password: "J0hnY"
+
+grafana_users: []

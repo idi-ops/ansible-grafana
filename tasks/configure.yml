@@ -1,4 +1,5 @@
 ---
+
 - name: Change admin password from default
   uri:
     method: PUT
@@ -26,65 +27,9 @@
     dest: "{{ grafana_admin_password_is_changed_file }}"
     force: no
 
-- name: Check if influxdb datasource configured
-  uri:
-    method: GET
-    user: "{{ grafana_admin_user|quote }}"
-    password: "{{ grafana_admin_password|quote }}"
-    force_basic_auth: true
-    body_format: json
-    url: "http://localhost:{{ grafana_port }}/api/datasources"
-  register: datasources
+- include: configure-users.yml
 
-- name: Set fact based on influxdb datasource configuration
-  set_fact:
-    influxdb_datasource_configuration: "{{ datasources.json | selectattr('name', 'equalto', grafana_influxdb_datasource_name) | list }}"
+- include: configure-datasources.yml
 
-- name: Configure influxdb datasource
-  uri:
-    method: POST
-    user: "{{ grafana_admin_user|quote }}"
-    password: "{{ grafana_admin_password|quote }}"
-    force_basic_auth: true
-    body_format: json
-    body: {
-      "name": "{{ grafana_influxdb_datasource_name }}",
-      "type": "influxdb",
-      "url": "http://localhost:8086",
-      "access": "proxy",
-      "basicAuth": false,
-      "database": "collectd",
-      "user": "{{ grafana_influxdb_user }}",
-      "password": "{{ grafana_influxdb_password }}",
-      "isDefault": true
-    }
-    url: "http://localhost:{{ grafana_port }}/api/datasources"
-  when: not influxdb_datasource_configuration
-
-- name: Create temporary directory for storing the dashboards
-  tempfile:
-    state: directory
-    suffix: dashboards
-  register: tmppath
-
-- name: Fetch the JSON dashboards
-  get_url:
-    url: "{{ item.url }}"
-    dest: "{{ tmppath.path }}/{{item.slug}}.json"
-  with_items: "{{ grafana_dashboards }}"
-
-- name: Create or Update the dashboards
-  uri:
-    url: "http://localhost:{{ grafana_port }}/api/dashboards/db"
-    method: POST
-    user: "{{ grafana_admin_user|quote }}"
-    password: "{{ grafana_admin_password|quote }}"
-    force_basic_auth: true
-    status_code: 200
-    headers:
-      Content-Type: 'application/json;charset=utf-8;'
-      Accept: 'application/json'
-    body: "{ 'dashboard': {{ lookup ( 'file', tmppath.path + '/' + item.slug + '.json') | from_json }}, 'overwrite': True } "
-    body_format: json
-  with_items: "{{ grafana_dashboards }}"
+- include: configure-dashboards.yml
 
