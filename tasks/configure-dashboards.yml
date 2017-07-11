@@ -1,15 +1,13 @@
 ---
 
 - name: Create temporary directory for storing the dashboards
-  tempfile:
-    state: directory
-    suffix: dashboards
+  become: false
+  local_action: tempfile state=directory suffix=dashboards
   register: tmppath
 
 - name: Fetch the JSON dashboards
-  get_url:
-    url: "{{ item.url }}"
-    dest: "{{ tmppath.path }}/{{item.slug}}.json"
+  become: false
+  local_action: get_url url="{{ item.url }}" dest="{{ tmppath.path }}/{{item.slug}}.json"
   with_items: "{{ grafana_dashboards }}"
 
 - name: Create or Update the dashboards
