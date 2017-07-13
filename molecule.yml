@@ -1,4 +1,5 @@
 ---
+
 dependency:
   name: galaxy
 driver:
@@ -22,6 +23,9 @@ vagrant:
     - "vm.network 'forwarded_port', guest: 3000, host: 3333"
 verifier:
   name: testinfra
+
+ansible:
+  playbook: tests/test.yml
 
 molecule:
   ignore_paths:

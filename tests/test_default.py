@@ -1,9 +1,14 @@
 from pytest import fixture
 import requests
+import yaml
 
 
-grafana_admin_user = "admin"
-grafana_admin_password = "definitelynotadmin"
+s = open("tests/test.yml", "r")
+y = yaml.load(s)
+s.close()
+
+grafana_admin_user = y[0]["vars"]["grafana_admin_user"]
+grafana_admin_password = y[0]["vars"]["grafana_admin_password"]
 
 
 # Adapted from
@@ -54,6 +59,7 @@ def test_grafana_has_influxdb_datasource(Command, TestinfraBackend):
     url = "%s:%s@%s:3000/api/datasources" % (grafana_admin_user, grafana_admin_password, hostname)
     cmd = Command("curl --silent %s" % url)
     assert '"name":"collectd (managed by ansible)"' in cmd.stdout
+
 
 def test_grafana_has_dashboard(Command, TestinfraBackend):
     hostname = TestinfraBackend.get_hostname()

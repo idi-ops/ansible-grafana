@@ -1,6 +1,5 @@
 ---
 - { include: install.yml, tags: ["install"] }
-- { include: configure-users.yml, tags: ["configure"] } 
-- { include: configure-datasources.yml, tags: ["configure"] } 
-- { include: configure-dashboards.yml, tags: ["configure"] } 
- 
+- { include: configure-users.yml, tags: ["configure"] }
+- { include: configure-datasources.yml, tags: ["configure"] }
+- { include: configure-dashboards.yml, tags: ["configure"] }

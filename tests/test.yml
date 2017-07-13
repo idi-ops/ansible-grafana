@@ -1,9 +1,40 @@
 ---
-- hosts: localhost
-  remote_user: root
-  roles:
-    - ansible-grafana
+
+- hosts: all
   vars:
+    grafana_admin_user: admin
+    #grafana_admin_password: rand0mp4ssw0rd
+    grafana_admin_password: admin
+
+    grafana_datasources:
+      - name: "Influsdb"
+        url: "http://localhost:8080"
+        type: "influxdb"
+        access: "direct"
+      - name: "Prometheus"
+        url: "http://localhost:8181"
+        type: "prometheus"
+        access: "direct"
+        is_default: true
+      - name: "Prometheus2"
+        url: "http://localhost:8081"
+        type: "prometheus"
+        access: "direct"
+
     grafana_dashboards:
+      - slug: node-exporter-single-server
+        url: https://grafana.com/api/dashboards/22/revisions/6/download
       - slug: docker-dashboard
         url: https://grafana.com/api/dashboards/179/revisions/5/download
+
+    grafana_users:
+      - name: "Alf"
+        email: "alf@doe.com"
+        login: "alf"
+        password: "4lllalf"
+      - name: "John"
+        email: "john@doe.com"
+        login: "john"
+        password: "J0hnY"
+  roles:
+    - role: ansible-grafana
