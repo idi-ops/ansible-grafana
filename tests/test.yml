@@ -7,7 +7,7 @@
     grafana_admin_password: admin
 
     grafana_datasources:
-      - name: "Influsdb"
+      - name: "Influxdb"
         url: "http://localhost:8080"
         type: "influxdb"
         access: "direct"
@@ -28,9 +28,9 @@
         url: https://grafana.com/api/dashboards/179/revisions/5/download
 
     grafana_users:
-      - name: "Alf"
-        email: "alf@doe.com"
-        login: "alf"
+      - name: "Peter"
+        email: "peter@doe.com"
+        login: "peter"
         password: "4lllalf"
       - name: "John"
         email: "john@doe.com"

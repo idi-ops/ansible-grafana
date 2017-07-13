@@ -1,5 +1,4 @@
 from pytest import fixture
-import requests
 import yaml
 
 
@@ -54,16 +53,30 @@ def test_grafana_api_accepts_our_password(Command, TestinfraBackend):
     assert cmd.stdout.startswith("2")
 
 
-def test_grafana_has_influxdb_datasource(Command, TestinfraBackend):
+def test_grafana_has_datasources(Command, TestinfraBackend):
     hostname = TestinfraBackend.get_hostname()
     url = "%s:%s@%s:3000/api/datasources" % (grafana_admin_user, grafana_admin_password, hostname)
     cmd = Command("curl --silent %s" % url)
-    assert '"name":"collectd (managed by ansible)"' in cmd.stdout
+    assert '"name":"Prometheus",' in cmd.stdout
+    assert '"name":"Prometheus2",' in cmd.stdout
+    assert '"name":"Influxdb",' in cmd.stdout
+
+
+def test_grafana_has_users(Command, TestinfraBackend):
+    hostname = TestinfraBackend.get_hostname()
+    url = "%s:%s@%s:3000/api/users" % (grafana_admin_user, grafana_admin_password, hostname)
+    cmd = Command("curl --silent %s" % url)
+    assert '"login":"admin",' in cmd.stdout
+    assert '"login":"john",' in cmd.stdout
+    assert '"login":"peter",' in cmd.stdout
 
 
 def test_grafana_has_dashboard(Command, TestinfraBackend):
     hostname = TestinfraBackend.get_hostname()
-    url = "%s:%s@%s:3000/api/dashboards" % (grafana_admin_user, grafana_admin_password, hostname)
-    response = requests.get(url)
-    assert response.status_code == requests.codes.ok
-    assert 'dasboard' in response.text
+    url = "%s:%s@%s:3000/api/dashboards/db/docker-dashboard" % (grafana_admin_user, grafana_admin_password, hostname)
+    cmd = Command("curl --silent %s" % url)
+    assert '"slug":"docker-dashboard"' in cmd.stdout
+    url = "%s:%s@%s:3000/api/dashboards/db/node-exporter-single-server" % (grafana_admin_user,
+                                                                           grafana_admin_password, hostname)
+    cmd = Command("curl --silent %s" % url)
+    assert '"slug":"node-exporter-single-server"' in cmd.stdout
