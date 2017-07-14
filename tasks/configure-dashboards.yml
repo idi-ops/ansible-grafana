@@ -1,10 +1,5 @@
 ---
 
-# - name: Create temporary directory for storing the dashboards
-#   become: false
-#   local_action: tempfile state=directory suffix=dashboards
-#   register: tmppath
-
 - name: Create temporary directory to store the dashboards
   become: false
   local_action: file path="/tmp/dashboard-jsons" state=directory
