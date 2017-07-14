@@ -2,8 +2,8 @@ from pytest import fixture
 import yaml
 
 
-s = open("tests/test.yml", "r")
-y = yaml.load(s)
+with open("tests/test.yml", "r") as s:
+    y = yaml.load(s)
 s.close()
 
 grafana_admin_user = y[0]["vars"]["grafana_admin_user"]
@@ -57,18 +57,18 @@ def test_grafana_has_datasources(Command, TestinfraBackend):
     hostname = TestinfraBackend.get_hostname()
     url = "%s:%s@%s:3000/api/datasources" % (grafana_admin_user, grafana_admin_password, hostname)
     cmd = Command("curl --silent %s" % url)
-    assert '"name":"Prometheus",' in cmd.stdout
-    assert '"name":"Prometheus2",' in cmd.stdout
-    assert '"name":"Influxdb",' in cmd.stdout
+    assert '"name":"Prometheus"' in cmd.stdout
+    assert '"name":"Prometheus2"' in cmd.stdout
+    assert '"name":"Influxdb"' in cmd.stdout
 
 
 def test_grafana_has_users(Command, TestinfraBackend):
     hostname = TestinfraBackend.get_hostname()
     url = "%s:%s@%s:3000/api/users" % (grafana_admin_user, grafana_admin_password, hostname)
     cmd = Command("curl --silent %s" % url)
-    assert '"login":"admin",' in cmd.stdout
-    assert '"login":"john",' in cmd.stdout
-    assert '"login":"peter",' in cmd.stdout
+    assert '"login":"admin"' in cmd.stdout
+    assert '"login":"john"' in cmd.stdout
+    assert '"login":"peter"' in cmd.stdout
 
 
 def test_grafana_has_dashboard(Command, TestinfraBackend):

@@ -8,40 +8,40 @@
     force_basic_auth: true
     body_format: json
     url: "http://localhost:{{ grafana_port }}/api/datasources"
-  register: datasources_raw
+  register: current_datasources_raw
 
 - name: Set fact based on the datasources installed from the raw response
   set_fact:
-    datasources_installed: "{{ datasources_raw.json }}"
+    current_datasources: "{{ current_datasources_raw.json }}"
 
 - name: Set default list facts
   set_fact:
-    datasources_list_to_install: []
-    datasources_list_to_update: []
-    datasources_installed_listnames: []
+    datasources_to_create: []
+    datasources_to_update: []
+    current_datasources_names: []
 
-- name: Set fact based on the datasources installed from the json list
+- name: Set fact based on the current datasources from the json list
   set_fact:
-    datasources_installed_listnames: "{{ datasources_installed_listnames | default([]) | union( [item.name] ) }}"
-  with_items: "{{ datasources_installed }}"
+    current_datasources_names: "{{ current_datasources_names | union( [item.name] ) }}"
+  with_items: "{{ current_datasources }}"
 
-- name: Set datasources fact to install
+- name: Set fact based on the current datasources to create
   set_fact:
-    datasources_list_to_install: "{{ datasources_list_to_install | default([]) | union( [item.name] ) }}"
-  when: not (item.name in datasources_installed_listnames)
+    datasources_to_create: "{{ datasources_to_create | union( [item.name] ) }}"
+  when: not (item.name in current_datasources_names)
   with_items: "{{ grafana_datasources }}"
 
-- name: Set datasorces fact to update
+- name: Set fact based on the current datasources to update
   set_fact:
-    datasources_list_to_update: "{{ datasources_list_to_update | default([]) | union( [item.name] ) }}"
-  when: item.name in datasources_installed_listnames
+    datasources_to_update: "{{ datasources_to_update | union( [item.name] ) }}"
+  when: item.name in current_datasources_names
   with_items: "{{ grafana_datasources }}"
 
-- name: Set datasources fact to delete
+- name: Set fact based on the current datasources to delete
   set_fact:
-    datasources_list_to_delete: "{{ datasources_installed_listnames | difference(datasources_list_to_install | union(datasources_list_to_update)) }}"
+    datasources_to_delete: "{{ current_datasources_names | difference(datasources_to_create | union(datasources_to_update)) }}"
 
-- name: Create datasource
+- name: Create datasources
   uri:
     method: POST
     user: "{{ grafana_admin_user|quote }}"
@@ -50,10 +50,10 @@
     body_format: json
     body: "{{ item | to_json }}"
     url: "http://localhost:{{ grafana_port }}/api/datasources"
-  when: item.name in datasources_list_to_install
+  when: item.name in datasources_to_create
   with_items: "{{ grafana_datasources }}"
 
-- name: Update datasource
+- name: Update datasources
   uri:
     method: PUT
     user: "{{ grafana_admin_user|quote }}"
@@ -62,15 +62,15 @@
     body_format: json
     body: "{{ item | to_json }}"
     url: "http://localhost:{{ grafana_port }}/api/datasources/{{item.id}}"
-  when: item.name in datasources_list_to_update
-  with_items: "{{ datasources_installed }}"
+  when: item.name in datasources_to_update
+  with_items: "{{ current_datasources }}"
 
-- name: Delete datasource
+- name: Delete datasources
   uri:
     method: DELETE
     user: "{{ grafana_admin_user|quote }}"
     password: "{{ grafana_admin_password|quote }}"
     force_basic_auth: true
     url: "http://localhost:{{ grafana_port }}/api/datasources/{{item.id}}"
-  when: item.name in datasources_list_to_delete
-  with_items: "{{ datasources_installed }}"
+  when: item.name in datasources_to_delete
+  with_items: "{{ current_datasources }}"

@@ -38,40 +38,40 @@
     force_basic_auth: true
     body_format: json
     url: "http://localhost:{{ grafana_port }}/api/users"
-  register: users_raw
+  register: current_users_raw
 
 - name: Set fact based on the users installed from the raw response
   set_fact:
-    users_installed: "{{ users_raw.json }}"
+    current_users: "{{ current_users_raw.json }}"
 
 - name: Set default list facts
   set_fact:
-    users_list_to_install: []
-    users_list_to_update: []
-    users_installed_listnames: []
+    users_to_create: []
+    users_to_update: []
+    current_users_names: []
 
 - name: Set fact based on the users installed from the json list
   set_fact:
-    users_installed_listnames: "{{ users_installed_listnames | default([]) | union( [item.name] ) }}"
-  with_items: "{{ users_installed }}"
+    current_users_names: "{{ current_users_names | union( [item.name] ) }}"
+  with_items: "{{ current_users }}"
 
-- name: Set users fact to install
+- name: Set fact based on users to create
   set_fact:
-    users_list_to_install: "{{ users_list_to_install | default([]) | union( [item.name] ) }}"
-  when: not (item.name in users_installed_listnames)
+    users_to_create: "{{ users_to_create | union( [item.name] ) }}"
+  when: not (item.name in current_users_names)
   with_items: "{{ grafana_users }}"
 
-- name: Set datasorces fact to update
+- name: Set fact based on datasorces to update
   set_fact:
-    users_list_to_update: "{{ users_list_to_update | default([]) | union( [item.name] ) }}"
-  when: item.name in users_installed_listnames
+    users_to_update: "{{ users_to_update | union( [item.name] ) }}"
+  when: item.name in current_users_names
   with_items: "{{ grafana_users }}"
 
-- name: Set users fact to delete
+- name: Set fact based on users to delete
   set_fact:
-    users_list_to_delete: "{{ users_installed_listnames | difference(users_list_to_install | union(users_list_to_update)) }}"
+    users_to_delete: "{{ current_users_names | difference(users_to_create | union(users_to_update)) }}"
 
-- name: Create user
+- name: Create users
   uri:
     method: POST
     user: "{{ grafana_admin_user|quote }}"
@@ -80,10 +80,10 @@
     body_format: json
     body: "{{ item | to_json }}"
     url: "http://localhost:{{ grafana_port }}/api/admin/users"
-  when: item.name in users_list_to_install
+  when: item.name in users_to_create
   with_items: "{{ grafana_users }}"
 
-- name: Update user
+- name: Update users
   uri:
     method: PUT
     user: "{{ grafana_admin_user|quote }}"
@@ -92,15 +92,15 @@
     body_format: json
     body: "{{ item | to_json }}"
     url: "http://localhost:{{ grafana_port }}/api/users/{{item.id}}"
-  when: item.name in users_list_to_update
-  with_items: "{{ users_installed }}"
+  when: item.name in users_to_update
+  with_items: "{{ current_users }}"
 
-- name: Delete user
+- name: Delete users
   uri:
     method: DELETE
     user: "{{ grafana_admin_user|quote }}"
     password: "{{ grafana_admin_password|quote }}"
     force_basic_auth: true
     url: "http://localhost:{{ grafana_port }}/api/admin/users/{{item.id}}"
-  when: (item.name in users_list_to_delete) and (item.id != 1)
-  with_items: "{{ users_installed }}"
+  when: (item.name in users_to_delete) and (item.id != 1)
+  with_items: "{{ current_users }}"
