@@ -3,8 +3,7 @@ import yaml
 
 
 with open("tests/test.yml", "r") as s:
-    y = yaml.load(s)
-s.close()
+    y = yaml.safe_load(s)
 
 grafana_admin_user = y[0]["vars"]["grafana_admin_user"]
 grafana_admin_password = y[0]["vars"]["grafana_admin_password"]
