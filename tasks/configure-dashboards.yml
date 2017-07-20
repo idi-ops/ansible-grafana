@@ -1,0 +1,24 @@
+---
+
+- name: Create temporary directory to store the dashboards
+  become: false
+  local_action: file path="/tmp/dashboard-jsons" state=directory
+
+- name: Fetch the JSON dashboards
+  become: false
+  local_action: get_url url="{{ item.url }}" dest="/tmp/dashboard-jsons/{{item.slug}}.json"
+  with_items: "{{ grafana_dashboards }}"
+
+- name: Create or Update the dashboards
+  uri:
+    url: "http://localhost:{{ grafana_port }}/api/dashboards/db"
+    method: POST
+    user: "{{ grafana_admin_user|quote }}"
+    password: "{{ grafana_admin_password|quote }}"
+    force_basic_auth: true
+    headers:
+      Content-Type: 'application/json;charset=utf-8;'
+      Accept: 'application/json'
+    body: "{ 'dashboard': {{ lookup ( 'file', '/tmp/dashboard-jsons/' + item.slug + '.json') | from_json }}, 'overwrite': True } "
+    body_format: json
+  with_items: "{{ grafana_dashboards }}"
